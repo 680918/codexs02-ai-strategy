@@ -1,14 +1,14 @@
-import numpy as np
-import pandas as pd
 
-def load_mock_data():
-    dates = pd.date_range("2024-01-01", periods=60)
-    data = {}
+from tushare_client import get_stock, get_index
 
-    for i, d in enumerate(dates):
-        data[str(d.date())] = {
-            "A": {"price": 10+i*0.1, "momentum": np.random.randn(), "volume": 1+np.random.rand()},
-            "B": {"price": 20+i*0.1, "momentum": np.random.randn(), "volume": 1+np.random.rand()}
-        }
+STOCKS = ["600519.SH", "000001.SZ", "601318.SH"]
 
-    return data
+def load_real_data():
+    stock_data = {}
+
+    for s in STOCKS:
+        stock_data[s] = get_stock(s, "20240101", "20240301")
+
+    index_data = get_index("20240101", "20240301")
+
+    return stock_data, index_data

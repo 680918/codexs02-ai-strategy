@@ -1,6 +1,12 @@
+
 def position(score, cfg):
-    if score < cfg["sell_threshold"]:
+    if score < 30:
         return 0
-    if score < cfg["buy_threshold"]:
-        return 0.3
-    return cfg["max_position"]
+    elif score < 50:
+        return 0.2
+    elif score < 70:
+        return 0.5
+    elif score < 85:
+        return 0.8
+    else:
+        return cfg.get("max_position", 1.0)
