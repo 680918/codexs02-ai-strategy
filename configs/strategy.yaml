@@ -1,0 +1,11 @@
+name: ai_v4
+
+buy_threshold: 55
+sell_threshold: 45
+
+weights:
+  momentum: 0.5
+  volume: 0.3
+  trend: 0.2
+
+max_position: 0.8
