@@ -1,13 +1,16 @@
+from portfolio import build_portfolio
+from risk import risk_adjust
 from data import load_real_data
 from strategy import calc_momentum, calc_volume, calc_rs, build_score
 
 
 def run():
+
     stock_data, index_data = load_real_data()
 
     index_ret = index_data["close"].pct_change().iloc[-1]
 
-    results = {}
+    scores = {}
 
     for code, df in stock_data.items():
 
@@ -17,15 +20,17 @@ def run():
 
         score = build_score(mom, vol, rs)
 
-        results[code] = score
+        scores[code] = score
 
-        print(code, "score:", round(score, 2))
+    portfolio = build_portfolio(scores)
 
-    best = max(results, key=results.get)
+    print("\n===== v4.3组合系统 =====")
 
-    print("\n===== v4.2结果 =====")
-    print("最强股票:", best)
-    print("评分:", results[best])
+    for k in portfolio:
+
+        adj = risk_adjust(portfolio[k], scores[k])
+
+        print(k, "score:", round(scores[k], 2), "allocation:", round(adj, 2))
 
 
 if __name__ == "__main__":

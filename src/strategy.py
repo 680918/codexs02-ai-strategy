@@ -1,4 +1,5 @@
 
+
 def calc_momentum(df):
     return df["close"].pct_change(5).iloc[-1]
 
@@ -12,9 +13,4 @@ def calc_rs(stock_ret, index_ret):
 
 
 def build_score(mom, vol, rs):
-    score = (
-        0.4 * mom +
-        0.3 * vol +
-        0.3 * rs
-    )
-    return score * 100
+    return (0.4 * mom + 0.3 * vol + 0.3 * rs) * 100
