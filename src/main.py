@@ -2,6 +2,7 @@ from portfolio import build_portfolio
 from risk import risk_adjust
 from data import load_real_data
 from strategy import calc_momentum, calc_volume, calc_rs, build_score
+from data_schema import validate_df
 
 
 def run():
@@ -13,6 +14,13 @@ def run():
     scores = {}
 
     for code, df in stock_data.items():
+
+          # 🟢 ★ 这里是你要加的地方（第一步）
+        df = validate_df(df)
+
+        # 🟢 ★ 防止空数据（第二步）
+        if df.empty:
+            continue
 
         mom = calc_momentum(df)
         vol = calc_volume(df)
