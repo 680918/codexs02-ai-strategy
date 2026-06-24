@@ -3,9 +3,13 @@ from risk import risk_adjust
 from data import load_real_data
 from strategy import calc_momentum, calc_volume, calc_rs, build_score
 from data_schema import validate_df
+from logger import Logger
+from report import generate_report
 
 
 def run():
+
+    logger = Logger()
 
     stock_data, index_data = load_real_data()
 
@@ -30,15 +34,19 @@ def run():
 
         scores[code] = score
 
+        
     portfolio = build_portfolio(scores)
 
+    
     print("\n===== v4.3组合系统 =====")
 
-    for k in portfolio:
+    for code in portfolio:
 
-        adj = risk_adjust(portfolio[k], scores[k])
+        adj = risk_adjust(portfolio[code], scores[code])
 
-        print(k, "score:", round(scores[k], 2), "allocation:", round(adj, 2))
+        logger.log(f"{code} score: {round(scores[code],2)} allocation: {round(adj,2)}")
+
+    generate_report(None, logger.get_logs())
 
 
 if __name__ == "__main__":
