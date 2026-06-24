@@ -2,6 +2,7 @@ from data import load_real_data
 from real_backtest_engine import run_real_backtest
 from metrics import evaluate_equity_curve
 from exporter import export_equity_curve, export_trades, export_summary
+from v49_report import generate_v49_report
 
 
 def main():
@@ -43,6 +44,11 @@ def main():
     trades_path = export_trades(trades)
 
     summary = f"""
+
+    generate_v49_report(
+    strategy_curve=equity_values,
+    index_data=index_data
+)
 ===== v4.8 回测摘要 =====
 
 初始资金: {equity_values[0]:.2f}
@@ -65,6 +71,8 @@ Sharpe Ratio: {metrics['sharpe']:.4f}
     print("净值曲线:", equity_path)
     print("交易记录:", trades_path)
     print("摘要报告:", summary_path)
+    from v49_report import generate_v49_report
+    generate_v49_report(equity_values, index_data)
 
 
 if __name__ == "__main__":
