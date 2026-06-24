@@ -65,6 +65,7 @@ def run_real_backtest(
     cash = initial_capital
     positions = {}
     equity_curve = []
+    trades = []
 
     dates = get_common_dates(stock_data)
 
@@ -138,7 +139,16 @@ def run_real_backtest(
             cost = calc_trade_cost(amount, fee_rate)
             cash += amount - cost
 
-        positions = {}
+            trades.append({
+                "trade_date": trade_date,
+                "code": code,
+                "action": "SELL",
+                "price": price,
+                "qty": qty,
+                "amount": amount,
+                "cost": cost,
+                "cash_after": cash
+            })
 
         # 再买入新组合
         available_cash = cash
@@ -156,4 +166,15 @@ def run_real_backtest(
             positions[code] = qty
             cash -= each_amount
 
-    return equity_curve
+            trades.append({
+                "trade_date": trade_date,
+                "code": code,
+                "action": "BUY",
+                "price": price,
+                "qty": qty,
+                "amount": buy_amount,
+                "cost": cost,
+                "cash_after": cash
+            })
+
+        return equity_curve, trades
