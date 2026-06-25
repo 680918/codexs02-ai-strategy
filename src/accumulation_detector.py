@@ -1,4 +1,14 @@
 import numpy as np
+from data_guard import safe_df
+
+def detect_accumulation(df):
+
+    df = safe_df(df)
+
+    if len(df) < 20:
+        return "数据不足"
+
+    ...
 
 def detect_accumulation(df):
 

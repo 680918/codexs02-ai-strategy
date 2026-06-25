@@ -1,4 +1,4 @@
-from types import Portfolio
+from portfolio_types import Portfolio
 
 def validate_portfolio(p):
 

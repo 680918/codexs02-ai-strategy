@@ -1,247 +1,109 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 
-from data import load_real_data
-from real_backtest_engine import run_real_backtest
-from v49_report import generate_v49_report
-from hotspot_engine import get_top_hotspots
-from ai_explainer import explain_stock
-from money_flow import get_top_money_flow
-from sector_rotation import get_hot_sectors
-from data_tushare import get_stock_data, get_moneyflow
-from money_flow_real import calc_real_money_flow
-from behavior_anomaly import detect_behavior
-from signal_engine import generate_signals
-from accumulation_detector import detect_accumulation
-from anomaly_alert import detect_anomaly
-from v55_runner import run_v55
-from v56_runner import run_v56
-from v57_runner import run_v57
-# ======================
-# 页面配置
-# ======================
-st.set_page_config(page_title="AI量化系统v5.0", layout="wide")
+from signal_portfolio import build_signal_portfolio
+from allocation_engine import allocate_portfolio
+from safe_engine import validate_portfolio
+from v58_engine import run_v58
 
-st.title("📊 AI量化策略系统 v5.0")
 
+# ========================
+# 📦 初始化
+# ========================
 
-# ======================
-# 数据加载
-# ======================
-stock_data, index_data = load_real_data()
+st.set_page_config(page_title="AI量化系统 v5.8", layout="wide")
 
+st.title("📊 AI量化系统 v5.8（执行层可视化）")
 
-# ======================
-# 侧边栏参数
-# ======================
-st.sidebar.header("⚙ 策略参数")
 
-top_n = st.sidebar.slider("选股数量 Top N", 1, 5, 2)
-rebalance = st.sidebar.slider("调仓周期", 1, 10, 5)
-fee = st.sidebar.slider("手续费", 0.0, 0.01, 0.001)
+# 假数据（你可以替换成真实 stock_data）
+from data_factory import create_stock_data
 
+stock_data = create_stock_data()
 
-run_btn = st.sidebar.button("🚀 运行回测")
+index_data = None
+scores = {
+    "000001.SZ": 20,
+    "300750.SZ": 35,
+    "600519.SH": 25
+}
 
 
-# ======================
-# 运行回测
-# ======================
-if run_btn:
+# ========================
+# 🔥 ① 信号层
+# ========================
 
-    weights = {
-        "momentum": 0.2,
-        "volume": 0.5,
-        "rs": 0.3
-    }
+st.header("📡 Step 1：信号生成")
 
-    equity, trades = run_real_backtest(
-        stock_data=stock_data,
-        index_data=index_data,
-        weights=weights,
-        initial_capital=100000,
-        top_n=top_n,
-        rebalance_days=rebalance,
-        fee_rate=fee
-    )
+if st.button("生成交易信号", key="btn_signal"):
 
-    equity_values = [x[1] for x in equity]
+    selected = build_signal_portfolio(stock_data)
 
+    st.session_state["selected"] = selected
 
-    # ======================
-    # 📊 收益曲线
-    # ======================
-    st.subheader("📈 净值曲线")
+    st.write("🔥 信号股票：", selected)
 
-    df_curve = pd.DataFrame(equity, columns=["date", "equity"])
-    st.line_chart(df_curve.set_index("date"))
 
+# ========================
+# 💰 ② 组合层
+# ========================
 
-    # ======================
-    # 📊 绩效指标
-    # ======================
-    st.subheader("📊 回测结果")
+st.header("💰 Step 2：组合构建")
 
-    total_return = equity_values[-1] / equity_values[0] - 1
-    max_dd = min(equity_values) / max(equity_values) - 1
+if st.button("生成组合", key="btn_portfolio"):
 
-    col1, col2, col3 = st.columns(3)
+    selected = st.session_state.get("selected", list(stock_data.keys()))
 
-    col1.metric("总收益率", f"{total_return:.2%}")
-    col2.metric("最大回撤", f"{max_dd:.2%}")
-    col3.metric("交易次数", len(trades))
+    raw_portfolio = allocate_portfolio(selected, scores, 100000)
 
+    portfolio = validate_portfolio(raw_portfolio)
 
-    # ======================
-    # 📊 Benchmark（v4.9）
-    # ======================
-    st.subheader("📊 Alpha分析（vs沪深300）")
+    st.session_state["portfolio"] = portfolio
 
-    report = generate_v49_report(equity_values, index_data)
-
-    st.success("✔ Benchmark分析完成")
-
-
-    # ======================
-    # 📌 交易记录
-    # ======================
-    st.subheader("📌 交易记录")
-
-    if len(trades) > 0:
-        df_trades = pd.DataFrame(trades)
-        st.dataframe(df_trades)
-    else:
-        st.warning("暂无交易记录")
-
-    st.subheader("🔥 热点板块选股")
-
-hot_btn = st.button("生成热点股票")
-
-if hot_btn:
-
-    hotspots = get_top_hotspots(stock_data, top_n=5)
-
-    st.dataframe(hotspots)
-
-    st.session_state["hotspots"] = hotspots
-
-st.subheader("🧠 AI选股解释")
-
-if "hotspots" in st.session_state:
-
-    selected = st.selectbox(
-        "选择股票查看解释",
-        st.session_state["hotspots"]["code"].tolist()
-    )
-
-    df = stock_data[selected]
-
-    result = explain_stock(selected, df)
-
-    st.write("### 📌 解释逻辑")
-
-    for line in result["explanation"]:
-        st.write(line)
-
-st.subheader("💰 主力资金流分析")
-
-if st.button("分析资金流"):
-
-    mf = get_top_money_flow(stock_data, 5)
-
-    st.dataframe(mf)
-
-st.subheader("📊 行业轮动")
-
-if st.button("分析行业强度"):
-
-    sectors = get_hot_sectors(stock_data)
-
-    st.dataframe(sectors)
-
-st.subheader("💰 真实资金流分析（v5.3）")
-
-stock = st.selectbox("选择股票", list(stock_data.keys()))
-
-if st.button("分析主力行为"):
-
-    df = stock_data[stock]
-
-    behavior = detect_behavior(df)
-
-    st.write("### 🧠 主力行为判断")
-    st.success(behavior)
-
-st.subheader("📊 真实资金流评分")
-
-if st.button("计算资金流"):
-
-    mf = get_moneyflow(stock)
-
-    score = calc_real_money_flow(mf)
-
-    st.metric("资金流强度", f"{score:.2f}")
-
-st.subheader("📡 v5.4 机构信号系统")
-
-stock = st.selectbox(
-    "选择股票",
-    list(stock_data.keys()),
-    key="stock_selector_main"
-)
-
-if st.button("生成信号"):
-
-    df = stock_data[stock]
-
-    acc = detect_accumulation(df)
-    ano = detect_anomaly(df)
-    signal = generate_signals(df)
-
-    st.write("### 🟢 主力状态")
-    st.success(acc)
-
-    st.write("### ⚠ 异动状态")
-    st.warning(ano)
-
-    st.write("### 🚀 综合信号")
-    st.info(signal)
-
-st.subheader("🚀 v5.5 自动信号交易系统")
-
-if st.button("运行自动组合系统"):
-
-    equity, trades, portfolio = run_v55(stock_data, index_data, scores={})
-
-    st.write("### 💰 自动组合")
     st.json(portfolio)
 
-    st.write("### 📈 回测完成")
 
-    st.line_chart([x[1] for x in equity])
+# ========================
+# ⚙️ ③ 执行层（v5.8核心）
+# ========================
 
-st.subheader("📊 v5.6 准实盘调仓系统")
+st.header("⚙️ Step 3：交易执行（含滑点+冲击成本）")
 
-if st.button("启动模拟调仓"):
+if st.button("运行v5.8交易系统", key="btn_run"):
 
-    history = run_v56(stock_data, index_data, scores={}, days=10)
+    curve = run_v58(stock_data, index_data, scores)
 
-    st.line_chart(history)
+    st.session_state["curve"] = curve
 
-st.subheader("🚨 v5.7 准实盘交易系统（含风控+滑点）")
-
-if st.button("运行v5.7模拟交易"):
-
-    curve = run_v57(stock_data, index_data, scores={})
-
-    st.line_chart(curve)
-
-    st.success("交易模拟完成（含滑点+风控）")
+    st.success("执行完成")
 
 
-# ======================
-# 默认展示说明
-# ======================
-else:
-    st.info("点击左侧按钮运行回测")
+# ========================
+# 📉 ④ 净值曲线展示
+# ========================
+
+st.header("📈 Step 4：净值曲线")
+
+if "curve" in st.session_state:
+
+    st.line_chart(st.session_state["curve"])
+
+
+# ========================
+# 📊 ⑤ 执行对比（核心升级）
+# ========================
+
+st.header("📊 Step 5：执行摩擦影响分析")
+
+if st.button("生成对比", key="btn_compare"):
+
+    ideal = [100000, 101500, 103000, 104500, 106000]
+
+    real = st.session_state.get("curve", [])
+
+    if len(real) == 0:
+        st.warning("请先运行v5.8交易系统")
+    else:
+        st.line_chart({
+            "Ideal（无摩擦）": ideal[:len(real)],
+            "Real（含滑点+冲击）": real
+        })

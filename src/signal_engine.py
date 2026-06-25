@@ -1,5 +1,12 @@
 from accumulation_detector import detect_accumulation
 from anomaly_alert import detect_anomaly
+from data_guard import safe_df
+
+def generate_signals(df):
+
+    df = safe_df(df)
+
+    acc = detect_accumulation(df)
 
 
 def generate_signals(df):
