@@ -17,6 +17,7 @@ from accumulation_detector import detect_accumulation
 from anomaly_alert import detect_anomaly
 from v55_runner import run_v55
 from v56_runner import run_v56
+from v57_runner import run_v57
 # ======================
 # 页面配置
 # ======================
@@ -227,6 +228,16 @@ if st.button("启动模拟调仓"):
     history = run_v56(stock_data, index_data, scores={}, days=10)
 
     st.line_chart(history)
+
+st.subheader("🚨 v5.7 准实盘交易系统（含风控+滑点）")
+
+if st.button("运行v5.7模拟交易"):
+
+    curve = run_v57(stock_data, index_data, scores={})
+
+    st.line_chart(curve)
+
+    st.success("交易模拟完成（含滑点+风控）")
 
 
 # ======================
