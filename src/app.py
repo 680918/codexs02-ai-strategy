@@ -12,6 +12,9 @@ from sector_rotation import get_hot_sectors
 from data_tushare import get_stock_data, get_moneyflow
 from money_flow_real import calc_real_money_flow
 from behavior_anomaly import detect_behavior
+from signal_engine import generate_signals
+from accumulation_detector import detect_accumulation
+from anomaly_alert import detect_anomaly
 
 # ======================
 # 页面配置
@@ -177,6 +180,31 @@ if st.button("计算资金流"):
     score = calc_real_money_flow(mf)
 
     st.metric("资金流强度", f"{score:.2f}")
+
+st.subheader("📡 v5.4 机构信号系统")
+
+stock = st.selectbox(
+    "选择股票",
+    list(stock_data.keys()),
+    key="stock_selector_main"
+)
+
+if st.button("生成信号"):
+
+    df = stock_data[stock]
+
+    acc = detect_accumulation(df)
+    ano = detect_anomaly(df)
+    signal = generate_signals(df)
+
+    st.write("### 🟢 主力状态")
+    st.success(acc)
+
+    st.write("### ⚠ 异动状态")
+    st.warning(ano)
+
+    st.write("### 🚀 综合信号")
+    st.info(signal)
 
 
 # ======================
