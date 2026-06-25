@@ -15,7 +15,8 @@ from behavior_anomaly import detect_behavior
 from signal_engine import generate_signals
 from accumulation_detector import detect_accumulation
 from anomaly_alert import detect_anomaly
-
+from v55_runner import run_v55
+from v56_runner import run_v56
 # ======================
 # 页面配置
 # ======================
@@ -205,6 +206,27 @@ if st.button("生成信号"):
 
     st.write("### 🚀 综合信号")
     st.info(signal)
+
+st.subheader("🚀 v5.5 自动信号交易系统")
+
+if st.button("运行自动组合系统"):
+
+    equity, trades, portfolio = run_v55(stock_data, index_data, scores={})
+
+    st.write("### 💰 自动组合")
+    st.json(portfolio)
+
+    st.write("### 📈 回测完成")
+
+    st.line_chart([x[1] for x in equity])
+
+st.subheader("📊 v5.6 准实盘调仓系统")
+
+if st.button("启动模拟调仓"):
+
+    history = run_v56(stock_data, index_data, scores={}, days=10)
+
+    st.line_chart(history)
 
 
 # ======================
