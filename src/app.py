@@ -7,6 +7,11 @@ from real_backtest_engine import run_real_backtest
 from v49_report import generate_v49_report
 from hotspot_engine import get_top_hotspots
 from ai_explainer import explain_stock
+from money_flow import get_top_money_flow
+from sector_rotation import get_hot_sectors
+from data_tushare import get_stock_data, get_moneyflow
+from money_flow_real import calc_real_money_flow
+from behavior_anomaly import detect_behavior
 
 # ======================
 # 页面配置
@@ -133,6 +138,45 @@ if "hotspots" in st.session_state:
 
     for line in result["explanation"]:
         st.write(line)
+
+st.subheader("💰 主力资金流分析")
+
+if st.button("分析资金流"):
+
+    mf = get_top_money_flow(stock_data, 5)
+
+    st.dataframe(mf)
+
+st.subheader("📊 行业轮动")
+
+if st.button("分析行业强度"):
+
+    sectors = get_hot_sectors(stock_data)
+
+    st.dataframe(sectors)
+
+st.subheader("💰 真实资金流分析（v5.3）")
+
+stock = st.selectbox("选择股票", list(stock_data.keys()))
+
+if st.button("分析主力行为"):
+
+    df = stock_data[stock]
+
+    behavior = detect_behavior(df)
+
+    st.write("### 🧠 主力行为判断")
+    st.success(behavior)
+
+st.subheader("📊 真实资金流评分")
+
+if st.button("计算资金流"):
+
+    mf = get_moneyflow(stock)
+
+    score = calc_real_money_flow(mf)
+
+    st.metric("资金流强度", f"{score:.2f}")
 
 
 # ======================
