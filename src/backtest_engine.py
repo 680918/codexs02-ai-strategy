@@ -1,5 +1,7 @@
 import numpy as np
 
+
+
 def run_backtest(stock_data, index_data, weights):
 
     total = 100000

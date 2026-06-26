@@ -81,3 +81,26 @@ def evaluate_equity_curve(equity_curve):
         "volatility": calc_volatility(equity_curve),
         "sharpe": calc_sharpe(equity_curve),
     }
+
+
+# import numpy as np
+
+def sharpe(returns):
+
+    if len(returns) < 2:
+        return 0
+
+    return np.mean(returns) / (np.std(returns) + 1e-8)
+
+
+def max_drawdown(values):
+
+    peak = values[0]
+    mdd = 0
+
+    for v in values:
+        peak = max(peak, v)
+        dd = (peak - v) / peak
+        mdd = max(mdd, dd)
+
+    return mdd
